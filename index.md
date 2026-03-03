@@ -100,22 +100,28 @@
 > 	editor = code --wait  # 默认编辑器：VSCode，--wait 保证 Git 等待保存并关闭文件后才继续git
 > [diff]
 > 	tool = bc
-> 	
+> 
 > [alias]
->     # 最佳图形化显示
->     lg = log --oneline --graph --all --decorate
->     
->     # 详细历史查看
->     hist = log --pretty=format:\"%C(yellow)%h %C(blue)%ad %C(reset)%s %C(green)[%an]\" --date=short
->     
->     # 查看最近
->     recent = log --oneline -20
->     
->     # 带统计的查看
->     ls = log --stat -10
->     
->     # 我的提交
->     mylog = log --author=\"RoadS1de\" --oneline
+> # 最佳图形化显示
+> lg = log --oneline --graph --all --decorate
+> 
+> # 详细历史查看
+> hist = log --pretty=format:\"%C(yellow)%h %C(blue)%ad %C(reset)%s %C(green)[%an]\" --date=short
+> 
+> # 查看最近
+> recent = log --oneline -20
+> 
+> # 带统计的查看
+> ls = log --stat -10
+> 
+> # 我的提交
+> mylog = log --author=\"RoadS1de\" --oneline
+> 
+> [fetch]
+> 	prune = true # 自动清理本地已不存在于远程仓库的分支引用
+> 	autoMaintenance = true  # 在执行 git fetch 后自动运行后台维护任务，保持大型仓库的性能和响应速度
+> [push]
+> 	default = simple
 > ```
 >
 
@@ -225,7 +231,7 @@ https://www.kdocs.cn/l/cj2MO6WONIx7
 > *==🦜==*
 >
 > ```bash
-> git status
+> git status -sb
 > ```
 
 
@@ -363,7 +369,7 @@ https://www.kdocs.cn/l/cj2MO6WONIx7
 | :----------- | :----------------------------------- |
 | `git status` | 查看仓库当前的状态，显示有变更的文件 |
 | `git add`    | 添加文件到暂存区                     |
-| `git commit` | 提交暂存区到本地仓库，==`-m`附带消息 |
+| `git commit` | 提交暂存区到本地仓库，`-m`附带消息   |
 
 ---
 
@@ -501,6 +507,14 @@ https://www.kdocs.cn/l/cj2MO6WONIx7
 
 
 
+> **（5）移出未追踪文件**
+>
+> ![image-20260206152226440](./image/image-20260206152226440.png)
+
+
+
+
+
 
 
 
@@ -624,10 +638,16 @@ Fast merge
 
 ==**给“快照”起一个有意义的名字**==
 
-> - 每次发布新版本（如 v1.0.0、v2.3.1），就打一个标签，运维同事只需知道：“部署 v1.0.1”，而不需要记住一长串 commit hash。
+> - 每次发布新版本（如 v1.0.0、v2.3.1），就打一个标签，运维同事只需知道：“部署 v1.0.1”，而不需要记住一长串 commit hash。同时发布版本的标签命名可以用`v1.0.0-Release`来标记发布版。
+>
 > - 未来**可以快速回到这个稳定版本**，比如：
+>
 >   - 用户报告 v1.2.0 有 bug，你可以立刻 `git checkout v1.2.0` 查看当时的代码。
 >   - 部署系统可以直接拉取 `v2.1.5` 构建生产环境。
+>
+>   `git tag -n`查看带注释的标签
+>
+>   `git tag -a <标签名> -m <注释>`打带注释的标签
 
 
 
@@ -641,9 +661,162 @@ Fast merge
 | `git push`      | 上传远程代码并合并          |
 | `git submodule` | 管理包含其他 Git 仓库的项目 |
 
-## git pull 
+### clone
+
+==常用浅克隆==
+
+`git clone --depth 1 <仓库地址>`只下载最近一次提交，节省空间和时间
+
+
+
+
+
+
+
+### 远程分支
+
+
+
+- `origin/main` **远程**分支特殊属性：切换到远程分支时，自动进入`分离 HEAD` 状态。Git 不希望开发者能直接操作远程分支。正确方法是在本地完成工作, 更新远程分支后，再用远程命令分享工作成果。
+
+### 远程跟踪分支
+
+- pull与push时，Git 如何知道 `main` 对应`origin/main` ；是因为名字相似而关联吗？
+  - 答案是：由分支的==remote tracking==属性决定，`main` 跟踪 `origin/main` 指定了==推的目的地==及==拉的合并目标==。
+  - 克隆时, Git 自动设置：1.将远程所有分支映射为本地跟踪分支（如 `origin/main`）；其次，检出并创建一个与远程默认分支同名的本地分支（如 `main`），并将其设置为跟踪该远程分支，便于直接开始工作。
+  ![image-20260207180348347](./image/image-20260207180348347.png)
+
+> **略**
+>
+> - pull 时, 提交记录先下载到 `origin/main` 上，再合并到本地的 `main` 分支。的。
+>
+> - push 时, 工作从 `main` 推到远程仓库中的 `main` 分支(同时更新远程分支 `origin/main`) 。
+>
+>   
+>
+
+
+
+
+
+### 上游
+
+
+
+关键概念：上游分支 (Upstream Branches)：本质就是一个远程跟踪分支，可以通过`push -u`指定，`clone`的仓库也会自动建立跟踪关系。能够让push和pull不带参数工作。
+
+![image-20260208120608236](./image/image-20260208120608236.png)
+
+### Git Fetch
+
+==**永远不会弄乱你的代码，只负责把新东西给你看**==
+
+-  远程仓库默认为 `origin`，反应了==上次和它通信时的状态==。
+-  `git fetch` 拉当前分支的 upstream（如果配置了），否则拉 `origin`
+
+> **`git fetch` 做的事**
+>
+> - 从远程仓库下载本地仓库中缺失的提交记录
+>
+> - 更新远程分支指针（如 `origin/main`）
+>
+>   总结：`git fetch` 实际更新==**本地仓库中的远程分支**==为远程的最新状态，实际上不会改变本地仓库状态、更新 `main` 分支、修改磁盘上文件。（这是pull才会做的事）
+>
+
+> **进阶用法**
+>
+> -  指定远程仓库名`git fetch origin -j4`
+> -  只拉取远程 main 分支的更新 `git fetch origin main`
+> -   `-p`/`--prune`：清理“远程已删”的跟踪分支
+> -  `git diff main origin/main` 查看差异
+> -  `git fetch --dry-run` 模拟一次 `fetch` 操作，告诉你哪些引用会被更新
+
+### pull 
 
 ==`pull`是`fetch` 与 `merge`的组合==
+
+`fetch`可以获取远程的数据,但是如何将这些变化更新到本地的工作呢？
+
+答案是==像合并本地分支那样来合并远程分支==，这意味着可以执行以下命令
+
+
+
+1. `git cherry-pick origin/main`
+2. `git rebase origin/main`
+3. `git merge origin/main`
+4. 等等……
+
+实际由于==抓取更新+合并到本地分支==流程很常用，git提供了专门的命令`git pull`。
+
+
+
+
+
+### push
+
+*==🦜==*
+
+```
+git push <remote> <place>
+```
+
+
+
+`<place>`可以是`<本地分支>:<远程分支>`，省略 `:<远程分支>` 时，==默认本地、远程同名==。
+
+推的分支在远程不存在会直接创建。
+
+同时因为指定了src/des，HEAD分离也不会影响该命令准确性。
+
+`git push origin main`切到本地仓库`main`分支获取所有提交，再到远程仓库`origin`中找到`main`分支，添加它没有的提交记录。
+
+> 正确设置上游分支：远程仓库名/分支名
+>
+> - **`-u` 即 `--set-upstream`**：✅✅✅重要参数`git push -u origin` 分支名，将本地分支与远程分支“绑定”（设置上游分支）后，只需 `git push` 和 `git pull` 即可，无需再指定仓库和分支名。
+>
+> - 推送当前分支到远程同名分支（推荐）：`git push -u origin feature/abc`
+> - 推送指定本地分支到远程指定分支：`git push origin feature/abc:feature/abc`
+> - 推送当前分支到远程不同名字：`git push origin feature/abc:feature/xyz`
+
+
+
+
+
+
+
+| push的default值         | 行为                                                         | 是否推荐                    |
+| ----------------------- | ------------------------------------------------------------ | --------------------------- |
+| `simple`                | 只推送当前分支到同名远程分支，且必须已建立上游关联（即用过 `-u`）。<br />安全、明确、无歧义。 | ✅ 强烈推荐（现代 Git 默认） |
+| `upstream` / `tracking` | 推送到当前分支的上游分支（即使名字不同）。                   | ⚠️ 少用                      |
+| `current`               | 推送当前分支到远程同名分支（即使没设上游）。                 | ⚠️ 可能意外创建远程分支      |
+| `matching`              | （旧默认）推送所有本地和远程都存在的同名分支。极其危险！     | ❌ 禁止使用                  |
+
+
+
+个人/团队保持 `push.default = simple`，养成用 `-u` 或显式写 `origin 分支名` 的习惯，可避免误操作
+
+
+
+
+
+> **功能合并后清理无用分支**
+>
+> *==🦜==*
+>
+> ```
+> # 安全、清晰的删除方式（推荐）
+> git push origin --delete <branch-name>
+> 
+> # 示例
+> git push origin --delete feature/old-feature
+> ```
+>
+
+
+
+
+
+
 
 ## 分支
 
@@ -674,7 +847,7 @@ Fast merge
 | 创建一个分支，起点是远程的 `main`                       | `git branch feature-xxx origin/main` |
 | 查看合并到当前分支的分支，准备清理                      | `git branch --merged`                |
 | 刚刚修复了一个 Bug，想基于提交 `a1b2c3d` 创建热修复分支 | `git branch hotfix a1b2c3d`          |
-| 误操作了——想删除一个未合并分支                          | `git branch -D bad-branch`           |
+| 误操作了——想强制删除一个未合并分支                      | `git branch -D bad-branch`           |
 | 当前分支和远程分支的对应关系                            | `git branch -vv`                     |
 | 当前分支 `dev` 的上游设置为 `origin/develop`            | `git branch -u origin/develop`       |
 
@@ -694,10 +867,18 @@ Fast merge
 
 - `git checkout <commit哈希>`切换到特定提交（HEAD发生分离），工作目录内容变为==该提交时的状态==，不建议直接在此基础上直接修改，先创建一个分支！
 
-- 为什么不建议：**分离 HEAD（detached HEAD）** 时提交，Git **会正常创建新的提交对象**，但==**不会被任何分支引用**==。意味着：
-  - 提交本身真实存在，但由于没有分支指向它，一旦切换到其他分支，那么它们将无法通过常规方式访问
-  - 补救措施：及时通过**分支**或**标签**“锚定”这些提交，否则**可能在未来被 Git 的垃圾回收机制（garbage collection）清除**。
-- 总结：==不要在**HEAD分离状态**下提交！==
+  
+
+> **不要在HEAD分离状态下提交！**
+>
+> - **分离 HEAD（detached HEAD）** 时提交，Git **会正常创建新的提交对象**，但==**不会被任何分支引用**==。意味着：
+>   
+>   1. 提交本身真实存在，但由于没有分支指向它，一旦切换到其他分支，将无法通过常规方式访问它
+>   
+>   2. 补救措施：及时通过**分支**或**标签**“锚定”，避免未来被 Git 的垃圾回收机制（garbage collection）清除。
+>   
+>   
+>
 
 
 
@@ -709,7 +890,7 @@ git merge合并其他分支到当前分支，如 `feature`合并到`main`，所�
 
 
 
-为了 `push` 新变更到远程仓库，首先要**包含**远程仓库中最新变更（只要本地分支包含远程分支，如 `o/main`中最新变更，可以选择`rebase` 或 `merge`。
+为了 `push` 新变更到远程仓库，首先要**包含**远程仓库中最新变更（只要本地分支包含远程分支，如 `origin/main`中最新变更，可以选择`rebase` 或 `merge`。
 
 那么有分支的push？
 
@@ -726,42 +907,6 @@ git merge合并其他分支到当前分支，如 `feature`合并到`main`，所�
 > 比如, 提交 C1 可以被 rebase 到 C3 之后。这看起来 C1 中的工作是在 C3 之后进行的，但实际上是在 C3 之前。
 >
 > 一些开发人员喜欢保留提交历史，更偏爱 merge；有的可能更喜欢干净的提交树，于是偏爱 rebase。 
-
-### 远程跟踪分支
-
-在前几节课程中有件事儿挺神奇的，Git 好像知道 `main` 与 `o/main` 是相关的。当然这些分支的名字是相似的，可能会让你觉得是依此将远程分支 main 和本地的 main 分支进行了关联。这种关联在以下两种情况下可以清楚地得到展示：
-
-- pull 操作时, 提交记录会被先下载到 o/main 上，之后再合并到本地的 main 分支。隐含的合并目标由这个关联确定的。
-
-- push 操作时, 我们把工作从 `main` 推到远程仓库中的 `main` 分支(同时会更新远程分支 `o/main`) 。这个推送的目的地也是由这种关联确定的！
-
-  ## 远程跟踪
-
-  直接了当地讲，`main` 和 `o/main` 的关联关系就是由分支的“remote tracking”属性决定的。`main` 被设定为跟踪 `o/main` —— 这意味着为 `main` 分支指定了推送的目的地以及拉取后合并的目标。
-
-  你可能想知道 `main` 分支上这个属性是怎么被设定的，你并没有用任何命令指定过这个属性呀！好吧, 当你克隆仓库的时候, Git 就自动帮你把这个属性设置好了。
-
-  当你克隆时, Git 会为远程仓库中的每个分支在本地仓库中创建一个远程分支（比如 `o/main`）。然后再创建一个跟踪远程仓库中活动分支的本地分支，默认情况下这个本地分支会被命名为 `main`。
-
-  克隆完成后，你会得到一个本地分支（如果没有这个本地分支的话，你的目录就是“空白”的），但是可以查看远程仓库中所有的分支（如果你好奇心很强的话）。这样做对于本地仓库和远程仓库来说，都是最佳选择。
-
-  这也解释了为什么会在克隆的时候会看到下面的输出：
-
-  ```
-  local branch "main" set to track remote branch "o/main"
-  ```
-
-### 我能自己指定这个属性吗？
-
-当然可以啦！你可以让任意分支跟踪 `o/main`, 然后该分支会像 `main` 分支一样得到隐含的 push 目的地以及 merge 的目标。 这意味着你可以在分支 `totallyNotMain` 上执行 `git push`，将工作推送到远程仓库的 `main` 分支上。
-
-有两种方法设置这个属性，第一种就是通过远程分支切换到一个新的分支，执行:
-
-```
-git checkout -b totallyNotMain o/main
-```
-
-就可以创建一个名为 `totallyNotMain` 的分支，它跟踪远程分支 `o/main`。
 
 ### 临时保存更改
 
@@ -1001,7 +1146,7 @@ git merge feature-branch
 *==🦜==*
 
 ```bash
-git status
+git status -sb
 
 # 输出会显示：
 # Unmerged paths:
@@ -1060,10 +1205,10 @@ git reset --hard HEAD
 
 # .gitignore 文件写法
 
- 
+
 
 > **(1) 通配符**
-
+> 
 > `#`是注释，会被git忽略，空行无实际意义
 > - `test.txt`  忽略根目录下的 `test.txt`。
 > - `src/test.txt` 忽略 `src` 目录下的 `test.txt`
@@ -1072,9 +1217,9 @@ git reset --hard HEAD
 > - `**`：匹配==任意层级==的目录。
 > - `**/build` -> 忽略任何位置下的 `build` 目录或文件（如 `src/build`, `build`, `a/b/c/build`）。
 >
+> 
 >
->
->
+> 
 
 
 
@@ -1114,126 +1259,7 @@ git reset --hard HEAD
 
 
 
-# 分支管理
-
-
-
-Git 分支管理是 Git 强大功能之一，能够让多个开发人员并行工作，开发新功能、修复 bug 或进行实验，而不会影响主代码库。
-
-几乎每一种版本控制系统都以某种形式支持分支，一个分支代表一条独立的开发线。
-
-使用分支意味着你可以从开发主线上分离开来，然后在不影响主线的同时继续工作。
-
-![img](./image/git-brance.svg)
-
-Git 分支实际上是指向更改快照的指针。
-
-有人把 Git 的分支模型称为**必杀技特性**，而正是因为它，将 **Git** 从版本控制系统家族里区分出来。
-
-### 创建分支
-
-创建新分支并切换到该分支：
-
-```
-git checkout -b <branchname>
-```
-
-例如：
-
-```
-git checkout -b feature-xyz
-```
-
-切换分支命令:
-
-```
-git checkout (branchname)
-```
-
-例如：
-
-```
-git checkout main
-```
-
-当你切换分支的时候，Git 会用该分支的最后提交的快照替换你的工作目录的内容， 所以多个分支不需要多个目录。
-
-### 查看分支
-
-查看所有分支：
-
-```
-git branch
-```
-
-查看远程分支：
-
-```
-git branch -r
-```
-
-查看所有本地和远程分支：
-
-```
-git branch -a
-```
-
-### 合并分支
-
-将其他分支合并到当前分支：
-
-```
-git merge <branchname>
-```
-
-例如，切换到 main 分支并合并 feature-xyz 分支：
-
-```
-git checkout main
-git merge feature-xyz
-```
-
-### 解决合并冲突
-
-当合并过程中出现冲突时，Git 会标记冲突文件，你需要手动解决冲突。
-
-打开冲突文件，按照标记解决冲突。
-
-标记冲突解决完成：
-
-```
-git add <conflict-file>
-```
-
-提交合并结果：
-
-```
-git commit
-```
-
-### 删除分支
-
-删除本地分支：
-
-```
-git branch -d <branchname>
-```
-
-强制删除未合并的分支：
-
-```
-git branch -D <branchname>
-```
-
-删除远程分支：
-
-```
-git push origin --delete <branchname>
-```
-
-------
-
-## 实例
+##    实例
 
 远程分支
 
@@ -1256,7 +1282,7 @@ $ git commit -m '第一次版本提交'
  create mode 100644 README
 ```
 
-------
+
 
 ## Git 分支管理
 
@@ -1529,7 +1555,7 @@ $ git commit
 
 
 
-# 钩子
+# 钩子hook
 
 1
 
@@ -1539,33 +1565,31 @@ $ git commit
 
 - Shell 会自动展开未转义的通配符：
 
-  - `git restore *.c` → Shell 展开为具体文件列表
-  - `git restore \*.c` 或 `git restore '*.c'` → Git 自己匹配索引中的路径
-
+- `git restore *.c` → Shell 展开为具体文件列表。
+- `git restore \*.c` 或 `git restore '*.c'` → Git 自己匹配索引中的路径。
 - 两者行为不同，尤其在文件已被删除但仍在索引中时。
 
-- ### **1.** ***\*基本参数顺序\****
+### 基本参数顺序
 
   - **选项（options）在前，参数（arguments）在后**
     例如：`git commit -m "msg" file.txt`
   - **修订版本（revisions）在前，路径（paths）在后**
     例如：`git diff v1.0 v2.0 src/`
 
-2. 避免歧义：使用 -- 分隔符
+避免歧义：使用 -- 分隔符
 当参数可能被误认为是修订或路径时，用 -- 明确分隔：
 git diff -- HEAD → 比较工作区中名为 HEAD 的文件
 git diff HEAD -- → 比较 HEAD 提交与整个工作区
 在脚本中处理用户输入时，强烈建议显式使用 -- 避免歧义。
 ⚠️ 注意：-- 不能用于分隔选项和修订（此时应使用 --end-of-options）。
 . 魔法文件名选项
-支持 : 前缀表示“可选文件”：
+支持 : 前缀表示“可选文件”
 bash
 
 编辑
 
-
-
 git commit -F :COMMIT_EDITMSG
+
 # 公司提交规范
 
 
